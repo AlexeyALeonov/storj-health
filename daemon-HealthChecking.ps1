@@ -5,10 +5,10 @@
     sls 'you are not publicly reachable' $file | select -Last 1 | %{Write-Warning ('```'+$_.Line+'```')}
     sls 'no public' $file | select -Last 1 | %{Write-Warning ('```'+$_.Line+'``` <-- *bad*')}
 
-    $upnp = ''
-    $port = ''
-    $address = ''
-    $delta = ''
+    $upnp = $null
+    $port = $null
+    $address = $null
+    $delta = $null
     $upnp = sls 'message":"(.* upnp.*?)"' $file | select -last 1 | % {$_.Matches.Groups[1].Value}
     if (-not $upnp) {
         sls 'message":"(.* public.*?)"' $file | select -last 1 | % {Write-Host $_.Matches.Groups[1].Value}
@@ -93,7 +93,7 @@
     }
 
     Write-Host "--------------"
-    if ($delta -ge 500.0 -or $delta -le -500.0) {
+    if ($delta -and ($delta -ge 500.0 -or $delta -le -500.0)) {
         Write-Warning ('clock delta: `' + $delta + '` <-- *bad*')
         Write-Host "        Your clock is out of sync
         Synchronize your clock
