@@ -80,19 +80,19 @@
         Write-Host
     }
     sls "\[(.*)\].* publish" $file | select -last 1 | % {
-        write-host "last publish ("(sls "publish" $file).Matches.Count'): `'$_.matches.Groups[1].value'`'
+        write-host 'last publish  : `'$_.matches.Groups[1].value'` ('(sls "publish" $file).Matches.Count')'
     }
     sls "\[(.*)\].* offer" $file | select -last 1 | % {
-        write-host "last offer ("(sls "offer" $file).Matches.Count'): `'$_.matches.Groups[1].value'`'
+        write-host 'last offer    : `'$_.matches.Groups[1].value'` ('(sls "offer" $file).Matches.Count')'
     }
     sls "\[(.*)\].* consign" $file | select -last 1 | % {
-        write-host "last consigned ("(sls "consign" $file).Matches.Count'): `'$_.matches.Groups[1].value'`'
+        write-host 'last consigned: `'$_.matches.Groups[1].value'` ('(sls "consign" $file).Matches.Count')'
     }
     sls '\[(.*)\].* download' $file | select -last 1 | % {
-        write-host "last download ("(sls 'download' $file).Matches.Count'): `'$_.matches.groups[1].value'`'
+        write-host 'last download : `'$_.matches.groups[1].value'` ('(sls 'download' $_.Path).Matches.Count')'
     }; 
     sls '\[(.*)\].* upload' $file | select -last 1 | % {
-        write-host "last upload ("(sls 'upload' $file).Matches.Count'): `'$_.matches.groups[1].value'`'
+        write-host 'last upload   : `'$_.matches.groups[1].value'` ('(sls 'upload' $_.Path).Matches.Count')'
     }
 
 
