@@ -8,6 +8,7 @@
     $upnp = ''
     $address = ''
     $port = ''
+    $delta = ''
     $upnp = sls '] (.* upnp.*)' $file | select -last 1 | % {$_.Matches.Groups[1].Value}
     if (-not $upnp) {
         sls '] (.* public.*)' $file | select -last 1 | % {$_.Matches.Groups[1].Value}
