@@ -60,7 +60,7 @@
         Write-Host 
     }
 
-    $checkPort = ''
+    $checkPort = $null
     if ($address -and $port) {
         $checkPort = try {
             Invoke-WebRequest ('http://' + $address + ':' + $port) -UseBasicParsing
