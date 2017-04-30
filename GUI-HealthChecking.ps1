@@ -21,8 +21,8 @@
             select -last 1 | %{$_.matches.Groups[1].value, $_.Matches.Groups[2].value}
     }
 
-    sls "kfs" $file | select -last 1 | % {Write-Host $_.Line}
-    sls "usedspace" $file | select -last 1 | % {Write-Host $_.Line}
+    sls "kfs " $file | select -last 1 | % {Write-Warning $_.Line}
+    sls "usedspace" $file | select -last 1 | % {Write-Warning $_.Line}
 
     sls "System clock is not syncronized with NTP" $file | select -last 1 | % {Write-Warning '`'$_.Line'` <-- *bad*'}
     sls "Timeout waiting for NTP response." $file | select -last 1 | % {Write-Warning '`'$_.Line'` <-- *bad*'}
@@ -42,12 +42,15 @@
 
     if ($nodeid) {
         Write-Host nodeid: '`'$nodeid'`'
-        $contact = (Invoke-WebRequest ("https://api.storj.io/contacts/" + $nodeid)).Content;
+        $contact = (Invoke-WebRequest ("https://api.storj.io/contacts/" + $nodeid) -UseBasicParsing).Content;
         $port = $contact | sls '"port":(\d*),' | % {$_.Matches.Groups[1].Value}
         $address = $contact | sls '"address":"(.*?)",' | % {$_.Matches.Groups[1].Value}
 
-        Write-Host "https://api.storj.io/contacts/$nodeid"
-        Write-Host '```'$contact'```'
+        if ($contact) {
+            Write-Host "https://api.storj.io/contacts/$nodeid"
+            Write-Host '```'$contact'```'
+            Write-Host 
+        }
 
         $contact | sls '"lastSeen":"(.*?)",' | % {Write-Host last seen: '`'$_.Matches.Groups[1].Value'`'}
         $contact | sls '"responseTime":(.*?),' | % {Write-Host response time: '`'$_.Matches.Groups[1].Value'`'}
@@ -59,13 +62,15 @@
     $checkPort = ''
     if ($address -and $port) {
         $checkPort = try {
-            Invoke-WebRequest ('http://' + $address + ':' + $port)
+            Invoke-WebRequest ('http://' + $address + ':' + $port) -UseBasicParsing
         } catch [System.Net.WebException] {
             ($_ | sls "get").matches.success
         }
         if ($checkPort) {
             Write-Host '`'port $port is open on $address'`'
         } else {
+            Write-Host http://www.yougetsignal.com/tools/open-ports/
+            Write-Host
             Write-Warning ('`port ' + $port + ' is CLOSED on ' + $address +'` <-- *bad*')
         }
         Write-Host

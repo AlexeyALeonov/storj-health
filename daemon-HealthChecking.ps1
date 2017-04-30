@@ -6,6 +6,8 @@
     sls 'no public' $file | select -Last 1 | %{Write-Warning ('```'+$_.Line+'``` <-- *bad*')}
 
     $upnp = ''
+    $port = ''
+    $address = ''
     $upnp = sls 'message":"(.* upnp.*?)"' $file | select -last 1 | % {$_.Matches.Groups[1].Value}
     if (-not $upnp) {
         sls 'message":"(.* public.*?)"' $file | select -last 1 | % {Write-Host $_.Matches.Groups[1].Value}
@@ -19,7 +21,7 @@
             select -last 1 | %{$_.matches.Groups[1].value, $_.Matches.Groups[2].value}
     }
 
-    sls "kfs" $file | select -last 1 | % {Write-Host $_.Line}
+    sls "kfs " $file | select -last 1 | % {Write-Host $_.Line}
     sls "usedspace" $file | select -last 1 | % {Write-Host $_.Line}
 
     sls "System clock is not syncronized with NTP" $file | select -last 1 | % {Write-Warning '`'$_.Line'` <-- *bad*'}
@@ -40,24 +42,27 @@
     $nodeid = sls 'create.*nodeid (.*?)"' $file | select -last 1 | % {$_.Matches.Groups[1].Value}
 
     if ($nodeid) {
-        $contact = (Invoke-WebRequest ("https://api.storj.io/contacts/" + $nodeid)).Content;
+        $contact = (Invoke-WebRequest ("https://api.storj.io/contacts/" + $nodeid) -UseBasicParsing).Content;
         $port = $contact | sls '"port":(\d*),' | % {$_.Matches.Groups[1].Value}
         $address = $contact | sls '"address":"(.*?)",' | % {$_.Matches.Groups[1].Value}
 
-        Write-Host "https://api.storj.io/contacts/$nodeid"
-        Write-Host '```'$contact'```'
+        if ($contact) {
+            Write-Host "https://api.storj.io/contacts/$nodeid"
+            Write-Host '```'$contact'```'
+            Write-Host 
+        }
 
         $contact | sls '"lastSeen":"(.*?)",' | % {Write-Host last seen: '`'$_.Matches.Groups[1].Value'`'}
         $contact | sls '"responseTime":(.*?),' | % {Write-Host response time: '`'$_.Matches.Groups[1].Value'`'}
         $contact | sls '"lastTimeout":"(.*?)",' | % {Write-Host last timeout: '`'$_.Matches.Groups[1].Value'`'}
         $contact | sls '"timeoutRate":(.*?),' | % {Write-Host timeout rate: '`'$_.Matches.Groups[1].Value'`'}
-        #Write-Host address: '`'$address'`', port: '`'$port'`'
+        Write-Host 
     }
 
     $checkPort = ''
     if ($address -and $port) {
         $checkPort = try {
-            Invoke-WebRequest ('http://' + $address + ':' + $port)
+            Invoke-WebRequest ('http://' + $address + ':' + $port) -UseBasicParsing
         } catch [System.Net.WebException] {
             ($_ | sls "get").matches.success
         }
