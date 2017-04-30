@@ -66,7 +66,6 @@
         } catch [System.Net.WebException] {
             ($_ | sls "get").matches.success
         }
-        Write-Host
         if ($checkPort) {
             Write-Host '`'port $port is open on $address'`'
         } else {
