@@ -28,7 +28,6 @@
     sls "Timeout waiting for NTP response." $file | select -last 1 | % {Write-Warning '`'$_.Line'` <-- *bad*'}
     
     sls "delta: (.*) ms" $file | select -last 1 | % {
-        Write-Host
         $delta = ''
         $delta = $_.matches.Groups[1].value.ToDecimal([System.Globalization.CultureInfo]::CurrentCulture);
         if ($delta -ge 500.0 -or $delta -le -500.0) {
@@ -36,6 +35,7 @@
         } else {
             write-host clock delta: '`'$delta'` <-- *ok*'
         }
+        Write-Host 
     }
 
     $nodeid = ''
@@ -52,10 +52,10 @@
             Write-Host 
         }
 
-        $contact | sls '"lastSeen":"(.*?)",' | % {Write-Host last seen: '`'$_.Matches.Groups[1].Value'`'}
-        $contact | sls '"responseTime":(.*?),' | % {Write-Host response time: '`'$_.Matches.Groups[1].Value'`'}
-        $contact | sls '"lastTimeout":"(.*?)",' | % {Write-Host last timeout: '`'$_.Matches.Groups[1].Value'`'}
-        $contact | sls '"timeoutRate":(.*?),' | % {Write-Host timeout rate: '`'$_.Matches.Groups[1].Value'`'}
+        $contact | sls '"lastSeen":"(.*?)",' |    % {Write-Host last seen    : '`'$_.Matches.Groups[1].Value'`'}
+        $contact | sls '"responseTime":(.*?),' |  % {Write-Host response time: '`'$_.Matches.Groups[1].Value'`'}
+        $contact | sls '"lastTimeout":"(.*?)",' | % {Write-Host last timeout : '`'$_.Matches.Groups[1].Value'`'}
+        $contact | sls '"timeoutRate":(.*?),' |   % {Write-Host timeout rate : '`'$_.Matches.Groups[1].Value'`'}
         Write-Host 
     }
 

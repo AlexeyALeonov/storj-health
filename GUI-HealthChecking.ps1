@@ -35,6 +35,7 @@
         } else {
             write-host clock delta: '`'$delta'` <-- *ok*'
         }
+        Write-Host 
     }
 
     $nodeid = $null;
@@ -52,10 +53,10 @@
             Write-Host 
         }
 
-        $contact | sls '"lastSeen":"(.*?)",' | % {Write-Host last seen: '`'$_.Matches.Groups[1].Value'`'}
-        $contact | sls '"responseTime":(.*?),' | % {Write-Host response time: '`'$_.Matches.Groups[1].Value'`'}
-        $contact | sls '"lastTimeout":"(.*?)",' | % {Write-Host last timeout: '`'$_.Matches.Groups[1].Value'`'}
-        $contact | sls '"timeoutRate":(.*?),' | % {Write-Host timeout rate: '`'$_.Matches.Groups[1].Value'`'}
+        $contact | sls '"lastSeen":"(.*?)",' |    % {Write-Host 'last seen    : `'$_.Matches.Groups[1].Value'`'}
+        $contact | sls '"responseTime":(.*?),' |  % {Write-Host 'response time: `'$_.Matches.Groups[1].Value'`'}
+        $contact | sls '"lastTimeout":"(.*?)",' | % {Write-Host 'last timeout : `'$_.Matches.Groups[1].Value'`'}
+        $contact | sls '"timeoutRate":(.*?),' |   % {Write-Host 'timeout rate : `'$_.Matches.Groups[1].Value'`'}
         Write-Host
     }
 
