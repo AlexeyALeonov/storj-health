@@ -4,11 +4,13 @@
 
     sls 'you are not publicly reachable' $file | select -Last 1 | %{Write-Warning ('```'+$_.Line+'```')}
     sls 'no public' $file | select -Last 1 | %{Write-Warning ('```'+$_.Line+'``` <-- *bad*')}
+    sls 'private ' $file | select -Last 1 | %{Write-Host ('```'+$_.Line+'``` <-- *bad*')}
 
     $upnp = $null
     $address = $null
     $port = $null
     $delta = $null
+
     $upnp = sls '] (.* upnp.*)' $file | select -last 1 | % {$_.Matches.Groups[1].Value}
     if (-not $upnp) {
         sls '] (.* public.*)' $file | select -last 1 | % {$_.Matches.Groups[1].Value}
