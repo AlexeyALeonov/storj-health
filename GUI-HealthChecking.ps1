@@ -1,10 +1,14 @@
-﻿Get-Item '~\AppData\Roaming\Storj Share\*.log' |%{
+﻿Param (
+    $Path
+)
+if (-not $Path) {$Path = '~\AppData\Roaming\Storj Share'}
+Get-Item (Join-Path $Path *.log) |%{
     $file = $_
     Write-Host $file.BaseName
 
-    sls 'you are not publicly reachable' $file | select -Last 1 | %{Write-Warning ('```'+$_.Line+'```')}
+    sls 'you are not publicly reachable' $file | select -Last 1 | %{Write-Host ('```'+$_.Line+'```')}
     sls 'no public' $file | select -Last 1 | %{Write-Warning ('```'+$_.Line+'``` <-- *bad*')}
-    sls 'private ' $file | select -Last 1 | %{Write-Host ('```'+$_.Line+'``` <-- *bad*')}
+    sls 'private ' $file | select -Last 1 | %{Write-Warning ('```'+$_.Line+'``` <-- *bad*')}
 
     $upnp = $null
     $address = $null
@@ -27,8 +31,8 @@
     sls "kfs " $file | select -last 1 | % {Write-Warning $_.Line}
     sls "usedspace" $file | select -last 1 | % {Write-Warning $_.Line}
 
-    sls "System clock is not syncronized with NTP" $file | select -last 1 | % {Write-Warning '`'$_.Line'` <-- *bad*'}
-    sls "Timeout waiting for NTP response." $file | select -last 1 | % {Write-Warning '`'$_.Line'` <-- *bad*'}
+    sls "System clock is not syncronized with NTP" $file | select -last 1 | % {Write-Warning ('`' + $_.Line + '` <-- *bad*')}
+    sls "Timeout waiting for NTP response." $file | select -last 1 | % {Write-Warning ('`' + $_.Line + '` <-- *bad*')}
 
     sls "delta: (.*) ms" $file | select -last 1 | % {
         $delta = ''
@@ -73,8 +77,6 @@
         if ($checkPort) {
             Write-Host '`'port $port is open on $address'`'
         } else {
-            Write-Host http://www.yougetsignal.com/tools/open-ports/
-            Write-Host
             Write-Warning ('`port ' + $port + ' is CLOSED on ' + $address +'` <-- *bad*')
         }
         Write-Host
@@ -98,7 +100,7 @@
 
     Write-Host "--------------"
     if ($delta -and ($delta -ge 500.0 -or $delta -le -500.0)) {
-        Write-Host ('clock delta: `' + $delta + '` <-- *bad*')
+        Write-Warning ('clock delta: `' + $delta + '` <-- *bad*')
         Write-Host "        Your clock is out of sync
         Synchronize your clock
         http://www.pool.ntp.org/en go here find ntp server closest to you physically and also ping it, 
@@ -109,11 +111,12 @@
         if (($upnp | sls 'successful').Matches.Success) {
             Write-Host ('`'+$upnp+'` <-- *not optimal*')
         } else {
-            Write-Host ('`'+$upnp+'` <-- *bad*')
+            Write-Warning ('`'+$upnp+'` <-- *bad*')
         }
     }
     if (-not $checkPort -and $port -and $address) {
-        Write-Host ('`port ' + $port + ' is CLOSED on ' + $address +'` <-- *bad*')
+        Write-Warning ('`port ' + $port + ' is CLOSED on ' + $address +'` <-- *bad*')
+        Write-Host 'Please, check it:' http://www.yougetsignal.com/tools/open-ports/
     }
     if (-not $checkPort -and $port -and $address -or $upnp) {
         Write-Host '        Enable UPnP in your router or configure port forwarding.
