@@ -17,7 +17,7 @@ Get-Item (Join-Path $Path *.log) |%{
 
     $upnp = sls 'message":"(.* upnp.*?)"' $file | select -last 1 | % {$_.Matches.Groups[1].Value}
     if (-not $upnp) {
-        sls 'message":"(.* public.*?)"' $file | select -last 1 | % {$_.Matches.Groups[1].Value}
+        sls 'message":"(.* public.*?)"' $file | select -last 1 | % {Write-Host $_.Matches.Groups[1].Value}
     } else {
         if (($upnp | sls 'successful').Matches.Success) {
             Write-Host ('`'+$upnp+'` <-- *not optimal*')
@@ -28,7 +28,7 @@ Get-Item (Join-Path $Path *.log) |%{
             select -last 1 | %{$_.matches.Groups[1].value, $_.Matches.Groups[2].value}
     }
 
-    sls "kfs " $file | select -last 1 | % {Write-Warning $_.Line}
+    sls "sharddata.kfs" $file | select -last 1 | % {Write-Warning $_.Line}
     sls "usedspace" $file | select -last 1 | % {Write-Warning $_.Line}
 
     sls "System clock is not syncronized with NTP" $file | select -last 1 | % {Write-Warning ('`' + $_.Line + '` <-- *bad*')}

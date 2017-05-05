@@ -28,7 +28,7 @@ Get-Item (Join-Path $Path *.log) |%{
             select -last 1 | %{$_.matches.Groups[1].value, $_.Matches.Groups[2].value}
     }
 
-    sls "kfs " $file | select -last 1 | % {Write-Warning $_.Line}
+    sls "sharddata.kfs" $file | select -last 1 | % {Write-Warning $_.Line}
     sls "usedspace" $file | select -last 1 | % {Write-Warning $_.Line}
 
     sls "System clock is not syncronized with NTP" $file | select -last 1 | % {Write-Warning ('`' + $_.Line + '` <-- *bad*')}
