@@ -11,8 +11,8 @@ Get-Item (Join-Path $Path *.log) |%{
     sls 'private ' $file | select -Last 1 | %{Write-Warning ('```'+$_.Line+'``` <-- *bad*')}
 
     $upnp = $null
-    $port = $null
     $address = $null
+    $port = $null
     $delta = $null
 
     $upnp = sls 'message":"(.* upnp.*?)"' $file | select -last 1 | % {$_.Matches.Groups[1].Value}
@@ -28,41 +28,41 @@ Get-Item (Join-Path $Path *.log) |%{
             select -last 1 | %{$_.matches.Groups[1].value, $_.Matches.Groups[2].value}
     }
 
-    sls "kfs " $file | select -last 1 | % {Write-Host $_.Line}
-    sls "usedspace" $file | select -last 1 | % {Write-Host $_.Line}
+    sls "kfs " $file | select -last 1 | % {Write-Warning $_.Line}
+    sls "usedspace" $file | select -last 1 | % {Write-Warning $_.Line}
 
     sls "System clock is not syncronized with NTP" $file | select -last 1 | % {Write-Warning ('`' + $_.Line + '` <-- *bad*')}
     sls "Timeout waiting for NTP response." $file | select -last 1 | % {Write-Warning ('`' + $_.Line + '` <-- *bad*')}
     
+    $delta = $null
     sls "delta: (.*) ms" $file | select -last 1 | % {
-        $delta = ''
         $delta = $_.matches.Groups[1].value.ToDecimal([System.Globalization.CultureInfo]::CurrentCulture);
         if ($delta -ge 500.0 -or $delta -le -500.0) {
             Write-Warning ('clock delta: `' + $delta + '` <-- *bad*')
         } else {
-            write-host clock delta: '`'$delta'` <-- *ok*'
+            write-host ('clock delta: `' + $delta + '` <-- *ok*')
         }
         Write-Host 
     }
 
-    $nodeid = ''
+    $nodeid = $null
     $nodeid = sls 'create.*nodeid (.*?)"' $file | select -last 1 | % {$_.Matches.Groups[1].Value}
 
     if ($nodeid) {
-        $contact = (Invoke-WebRequest ("https://api.storj.io/contacts/" + $nodeid) -UseBasicParsing).Content;
+        Write-Host nodeid: '`'$nodeid'`'        $contact = (Invoke-WebRequest ("https://api.storj.io/contacts/" + $nodeid) -UseBasicParsing).Content;
         $port = $contact | sls '"port":(\d*),' | % {$_.Matches.Groups[1].Value}
         $address = $contact | sls '"address":"(.*?)",' | % {$_.Matches.Groups[1].Value}
 
         if ($contact) {
             Write-Host "https://api.storj.io/contacts/$nodeid"
-            Write-Host '```'$contact'```'
+            Write-Host ('```' + $contact.ToString() + '```')
             Write-Host 
         }
 
-        $contact | sls '"lastSeen":"(.*?)",' |    % {Write-Host 'last seen     : `'$_.Matches.Groups[1].Value'`'}
-        $contact | sls '"responseTime":(.*?),' |  % {Write-Host 'response time : `'$_.Matches.Groups[1].Value'`'}
-        $contact | sls '"lastTimeout":"(.*?)",' | % {Write-Host 'last timeout  : `'$_.Matches.Groups[1].Value'`'}
-        $contact | sls '"timeoutRate":(.*?),' |   % {Write-Host 'timeout rate  : `'$_.Matches.Groups[1].Value'`'}
+        $contact | sls '"lastSeen":"(.*?)",' |    % {Write-Host ('last seen     : `' + $_.Matches.Groups[1].Value + '`')}
+        $contact | sls '"responseTime":(.*?),' |  % {Write-Host ('response time : `' + $_.Matches.Groups[1].Value + '`')}
+        $contact | sls '"lastTimeout":"(.*?)",' | % {Write-Host ('last timeout  : `' + $_.Matches.Groups[1].Value + '`')}
+        $contact | sls '"timeoutRate":(.*?),' |   % {Write-Host ('timeout rate  : `' + $_.Matches.Groups[1].Value + '`')}
         Write-Host 
     }
 
@@ -74,26 +74,26 @@ Get-Item (Join-Path $Path *.log) |%{
             ($_ | sls "get").matches.success
         }
         if ($checkPort) {
-            Write-Host '`'port $port is open on $address'`'
+            Write-Host ('`port ' + $port + ' is open on ' + $address + '`')
         } else {
             Write-Warning ('`port ' + $port + ' is CLOSED on ' + $address + '` <-- *bad*')
         }
         Write-Host
     }
     sls 'publish .*timestamp":"(.*)"' $file | select -last 1 | % {
-        write-host 'last publish  : `'$_.matches.Groups[1].value'` ('(sls "publish" $file).Matches.Count')'
+        write-host ('last publish  : `' + $_.matches.Groups[1].value + '` (' + (sls "publish" $file).Matches.Count + ')')
     }
     sls 'offer .*timestamp":"(.*)"' $file | select -last 1 | % {
-        write-host 'last offer    : `'$_.matches.Groups[1].value'` ('(sls "offer" $file).Matches.Count')'
+        write-host ('last offer    : `' + $_.matches.Groups[1].value + '` (' + (sls "offer" $file).Matches.Count + ')')
     }
     sls 'consign.*timestamp":"(.*)"' $file | select -last 1 | % {
-        write-host 'last consigned: `'$_.matches.Groups[1].value'` ('(sls "consign" $file).Matches.Count')'
+        write-host ('last consigned: `' + $_.matches.Groups[1].value + '` (' + (sls "consign" $file).Matches.Count + ')')
     }
     sls 'download.*timestamp":"(.*)"' $_ | select -last 1 | % {
-        write-host 'last download : `'$_.matches.groups[1].value'` ('(sls 'download' $_.Path).Matches.Count')'
+        write-host ('last download : `' + $_.matches.groups[1].value + '` (' + (sls 'download' $_.Path).Matches.Count + ')')
     }; 
     sls 'upload.*timestamp":"(.*)"' $_ | select -last 1 | % {
-        write-host 'last upload   : `'$_.matches.groups[1].value'` ('(sls 'upload' $_.Path).Matches.Count')'
+        write-host ('last upload   : `' + $_.matches.groups[1].value + '` (' + (sls 'upload' $_.Path).Matches.Count + ')')
     }
 
     Write-Host "--------------"
