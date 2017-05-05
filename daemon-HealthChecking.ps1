@@ -17,7 +17,7 @@ Get-Item (Join-Path $Path *.log) |%{
 
     $upnp = sls 'message":"(.* upnp.*?)"' $file | select -last 1 | % {$_.Matches.Groups[1].Value}
     if (-not $upnp) {
-        sls 'message":"(.* public.*?)"' $file | select -last 1 | % {Write-Host $_.Matches.Groups[1].Value}
+        sls 'message":"(.* public.*?)"' $file | select -last 1 | % {$_.Matches.Groups[1].Value}
     } else {
         if (($upnp | sls 'successful').Matches.Success) {
             Write-Host ('`'+$upnp+'` <-- *not optimal*')
@@ -49,9 +49,13 @@ Get-Item (Join-Path $Path *.log) |%{
     $nodeid = sls 'create.*nodeid (.*?)"' $file | select -last 1 | % {$_.Matches.Groups[1].Value}
 
     if ($nodeid) {
+        $contact = $null
         $contact = (Invoke-WebRequest ("https://api.storj.io/contacts/" + $nodeid) -UseBasicParsing).Content;
         $port = $contact | sls '"port":(\d*),' | % {$_.Matches.Groups[1].Value}
         $address = $contact | sls '"address":"(.*?)",' | % {$_.Matches.Groups[1].Value}
+
+        $isTunneling = $null
+        $isTunneling = ($address | sls "storj\.dk").Matches.Success
 
         if ($contact) {
             Write-Host "https://api.storj.io/contacts/$nodeid"
@@ -59,21 +63,23 @@ Get-Item (Join-Path $Path *.log) |%{
             Write-Host 
         }
 
-        $contact | sls '"lastSeen":"(.*?)",' |    % {Write-Host ('last seen     : `' + $_.Matches.Groups[1].Value + '`')}
+        $address |                                % {Write-Host ('   rpcAddress : `' + $_ + '`')}
+        $port |                                   % {Write-Host ('      rpcPort : `' + $_ + '`')}
+        $contact | sls '"lastSeen":"(.*?)",' |    % {Write-Host ('    last seen : `' + $_.Matches.Groups[1].Value + '`')}
         $contact | sls '"responseTime":(.*?),' |  % {Write-Host ('response time : `' + $_.Matches.Groups[1].Value + '`')}
-        $contact | sls '"lastTimeout":"(.*?)",' | % {Write-Host ('last timeout  : `' + $_.Matches.Groups[1].Value + '`')}
-        $contact | sls '"timeoutRate":(.*?),' |   % {Write-Host ('timeout rate  : `' + $_.Matches.Groups[1].Value + '`')}
+        $contact | sls '"lastTimeout":"(.*?)",' | % {Write-Host (' last timeout : `' + $_.Matches.Groups[1].Value + '`')}
+        $contact | sls '"timeoutRate":(.*?),' |   % {Write-Host (' timeout rate : `' + $_.Matches.Groups[1].Value + '`')}
         Write-Host 
     }
 
-    $checkPort = $null
-    if ($address -and $port) {
-        $checkPort = try {
+    $isPortOpen = $null
+    if ($address -and $port -and -not $isTunneling) {
+        $isPortOpen = try {
             Invoke-WebRequest ('http://' + $address + ':' + $port) -UseBasicParsing
         } catch [System.Net.WebException] {
             ($_ | sls "get").matches.success
         }
-        if ($checkPort) {
+        if ($isPortOpen) {
             Write-Host ('`port ' + $port + ' is open on ' + $address + '`')
         } else {
             Write-Warning ('`port ' + $port + ' is CLOSED on ' + $address + '` <-- *bad*')
@@ -81,19 +87,19 @@ Get-Item (Join-Path $Path *.log) |%{
         Write-Host
     }
     sls 'publish .*timestamp":"(.*)"' $file | select -last 1 | % {
-        write-host ('last publish  : `' + $_.matches.Groups[1].value + '` (' + (sls "publish" $file).Matches.Count + ')')
+        write-host ('  last publish: `' + $_.matches.Groups[1].value + '` (' + (sls "publish" $file).Matches.Count + ')')
     }
     sls 'offer .*timestamp":"(.*)"' $file | select -last 1 | % {
-        write-host ('last offer    : `' + $_.matches.Groups[1].value + '` (' + (sls "offer" $file).Matches.Count + ')')
+        write-host ('    last offer: `' + $_.matches.Groups[1].value + '` (' + (sls "offer" $file).Matches.Count + ')')
     }
     sls 'consign.*timestamp":"(.*)"' $file | select -last 1 | % {
         write-host ('last consigned: `' + $_.matches.Groups[1].value + '` (' + (sls "consign" $file).Matches.Count + ')')
     }
     sls 'download.*timestamp":"(.*)"' $_ | select -last 1 | % {
-        write-host ('last download : `' + $_.matches.groups[1].value + '` (' + (sls 'download' $_.Path).Matches.Count + ')')
+        write-host (' last download: `' + $_.matches.groups[1].value + '` (' + (sls 'download' $_.Path).Matches.Count + ')')
     }; 
     sls 'upload.*timestamp":"(.*)"' $_ | select -last 1 | % {
-        write-host ('last upload   : `' + $_.matches.groups[1].value + '` (' + (sls 'upload' $_.Path).Matches.Count + ')')
+        write-host ('   last upload: `' + $_.matches.groups[1].value + '` (' + (sls 'upload' $_.Path).Matches.Count + ')')
     }
 
     Write-Host "--------------"
@@ -112,11 +118,14 @@ Get-Item (Join-Path $Path *.log) |%{
             Write-Warning ('`'+$upnp+'` <-- *bad*')
         }
     }
-    if (-not $checkPort -and $port -and $address) {
+    if (-not $isPortOpen -and $port -and $address -and -not $isTunneling) {
         Write-Warning ('`port ' + $port + ' is CLOSED on ' + $address +'` <-- *bad*')
         Write-Host 'Please, check it:' http://www.yougetsignal.com/tools/open-ports/
     }
-    if (-not $checkPort -and $port -and $address -or $upnp) {
+    if ($isTunneling) {
+        Write-Host '`You are using tunneling` <-- *not optimal*'
+    }
+    if (-not $isPortOpen -and $port -and $address -or $upnp -or $isTunneling) {
         Write-Host '        Enable UPnP in your router or configure port forwarding.
         - Enable NAT/UPnP in your router settings or disable the NAT firewall of your PC (if you have such firewall)
         - Configure port forwarding (best option), you can watch this tutorial where all previous steps are explained: 
