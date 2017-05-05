@@ -4,7 +4,9 @@
 if (-not $Path) {$Path = '~\AppData\Roaming\Storj Share'}
 Get-Item (Join-Path $Path *.log) |%{
     $file = $_;
+    Write-Host "====================="
     Write-Host $file.Name;
+    Write-Host
 
     sls 'you are not publicly reachable' $file | select -Last 1 | %{Write-Host ('```'+$_.Line+'```')}
     sls 'no public' $file | select -Last 1 | %{Write-Warning ('```'+$_.Line+'``` <-- *bad*')}
@@ -54,7 +56,7 @@ Get-Item (Join-Path $Path *.log) |%{
         $port = $contact | sls '"port":(\d*),' | % {$_.Matches.Groups[1].Value}
         $address = $contact | sls '"address":"(.*?)",' | % {$_.Matches.Groups[1].Value}
 
-        $isTunneling = $null
+        $isTunneling = $false
         $isTunneling = ($address | sls "storj\.dk").Matches.Success
 
         if ($contact) {
