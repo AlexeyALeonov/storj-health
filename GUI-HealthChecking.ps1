@@ -49,7 +49,6 @@ Get-Item (Join-Path $Path *.log) |%{
     $nodeid = sls 'created .* nodeid (.*)' $file | select -last 1 | %{$_.Matches.Groups[1].Value}
 
     if ($nodeid) {
-        Write-Host nodeid: '`'$nodeid'`'
         $contact = (Invoke-WebRequest ("https://api.storj.io/contacts/" + $nodeid) -UseBasicParsing).Content;
         $port = $contact | sls '"port":(\d*),' | % {$_.Matches.Groups[1].Value}
         $address = $contact | sls '"address":"(.*?)",' | % {$_.Matches.Groups[1].Value}
