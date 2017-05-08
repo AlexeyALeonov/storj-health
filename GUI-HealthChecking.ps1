@@ -72,6 +72,8 @@ Get-Item (Join-Path $Path *.log) |%{
             Write-Host "https://api.storj.io/contacts/$nodeid"
             Write-Host ('```' + $contact.ToString() + '```')
             Write-Host 
+        } else {
+            Write-Host $nodeid
         }
 
         $address |                                % {Write-Host ('   rpcAddress : `' + $_ + '`')}

@@ -39,8 +39,8 @@ Get-Item (Join-Path $Path *.log) |%{
         Write-Host
     }
 
-    sls "sharddata.kfs" $file | select -last 1 | % {Write-Warning $_.Line}
-    sls "usedspace" $file | select -last 1 | % {Write-Warning $_.Line}
+    sls "sharddata.kfs" $file | select -last 1 | % {Write-Warning ('```' + $_.Line + '```  <-- *bad*')}
+    sls "usedspace" $file | select -last 1 | % {Write-Warning ('```' + $_.Line + '```  <-- *bad*')}
 
     sls "System clock is not syncronized with NTP" $file | select -last 1 | % {Write-Warning ('`' + $_.Line + '` <-- *bad*')}
     sls "Timeout waiting for NTP response." $file | select -last 1 | % {Write-Warning ('`' + $_.Line + '` <-- *bad*')}
@@ -72,6 +72,8 @@ Get-Item (Join-Path $Path *.log) |%{
             Write-Host "https://api.storj.io/contacts/$nodeid"
             Write-Host ('```' + $contact.ToString() + '```')
             Write-Host 
+        } else {
+            Write-Host $nodeid
         }
 
         $address |                                % {Write-Host ('   rpcAddress : `' + $_ + '`')}
