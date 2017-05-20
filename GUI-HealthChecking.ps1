@@ -166,3 +166,4 @@ Get-Item (Join-Path $Path *.log) |%{
         '
     }
 }
+Pause
