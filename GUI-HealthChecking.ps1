@@ -158,11 +158,9 @@ Get-Item (Join-Path $Path *.log) |%{
         Write-Host '`You are using tunneling` <-- *not optimal*'
     }
     if (-not $isPortOpen -and $port -and $address -or $upnp -or $isTunneling) {
-        Write-Host '        Enable UPnP in your router or configure port forwarding.
-        - Enable NAT/UPnP in your router settings or disable the NAT firewall of your PC (if you have such firewall)
-        - Configure port forwarding (best option), you can watch this tutorial where all previous steps are explained: 
-        https://www.youtube.com/watch?v=PjbXpdsMIW4
-        Or you can read docs.storj.io/docs/storjshare-troubleshooting-guide in the "port forwarding" section.
+        Write-Host '        Please, read this manual to fix this: 
+        For GUI: https://docs.google.com/document/d/1Q87QzIn5UwskzdEaU1zoo7URrkl6Na7FYKrR5TeWNdw/edit#heading=h.3o7alnk
+        For daemon: https://docs.google.com/document/d/1D3VJAz_mDbeki8wiErw2000dzltisqHFxfRFEdqYE_8/edit
         '
     }
 }
