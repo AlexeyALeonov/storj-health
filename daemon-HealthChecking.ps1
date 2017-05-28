@@ -153,14 +153,18 @@ Get-Item (Join-Path $Path *.log) |%{
         Write-Warning ('`port ' + $port + ' is CLOSED on ' + $address +'` <-- *bad*')
         Write-Host 'Please, check it:' http://www.yougetsignal.com/tools/open-ports/
         Write-Host
+        Write-Host 'Please, read this manual to fix this:
+        GUI:    https://docs.storj.io/docs/storj-share-gui-5xx#section-5-storj-share-troubleshooting
+        daemon: https://docs.storj.io/docs/storj-share-daemon-cli#section-4-storj-share-troubleshooting
+        '
     }
     if ($isTunneling) {
         Write-Host '`You are using tunneling` <-- *not optimal*'
     }
     if (-not $isPortOpen -and $port -and $address -or $upnp -or $isTunneling) {
-        Write-Host '        Please, read this manual to fix this: 
-        For GUI: https://docs.google.com/document/d/1Q87QzIn5UwskzdEaU1zoo7URrkl6Na7FYKrR5TeWNdw/edit#heading=h.3o7alnk
-        For daemon: https://docs.google.com/document/d/1D3VJAz_mDbeki8wiErw2000dzltisqHFxfRFEdqYE_8/edit
+        Write-Host 'Please, read this manual to fix this: 
+        GUI:    https://docs.storj.io/docs/storj-share-gui-5xx#section-3-3-2-advanced-configuration
+        daemon: https://docs.storj.io/docs/storj-share-daemon-cli
         '
     }
 }
