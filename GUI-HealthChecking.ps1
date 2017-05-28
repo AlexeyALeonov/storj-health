@@ -68,12 +68,9 @@ Get-Item (Join-Path $Path *.log) |%{
         $isTunneling = $false
         $isTunneling = ($address | sls "storj\.dk").Matches.Success
 
+        Write-Host "https://api.storj.io/contacts/$nodeid"
         if ($contact) {
-            Write-Host "https://api.storj.io/contacts/$nodeid"
             Write-Host ('```' + $contact.ToString() + '```')
-            Write-Host 
-        } else {
-            Write-Host $nodeid
         }
 
         $address |                                % {Write-Host ('   rpcAddress : `' + $_ + '`')}
@@ -131,9 +128,7 @@ Get-Item (Join-Path $Path *.log) |%{
     if ($delta -and ($delta -ge 500.0 -or $delta -le -500.0)) {
         Write-Warning ('clock delta: `' + $delta + '` <-- *bad*')
         Write-Host "        Your clock is out of sync
-        Synchronize your clock
-        http://www.pool.ntp.org/en go here find ntp server closest to you physically and also ping it, 
-        then download this software http://www.timesynctool.com and use ntp server that you found out in previous step
+        https://docs.storj.io/docs/storjshare-troubleshooting-guide#section-4-synchronize-your-clock
         "
     }
     if ($isPrivate) {
@@ -155,16 +150,14 @@ Get-Item (Join-Path $Path *.log) |%{
         Write-Host
         Write-Host 'Please, read this manual to fix this:
         GUI:    https://docs.storj.io/docs/storj-share-gui-5xx#section-5-storj-share-troubleshooting
-        daemon: https://docs.storj.io/docs/storj-share-daemon-cli#section-4-storj-share-troubleshooting
         '
     }
     if ($isTunneling) {
         Write-Host '`You are using tunneling` <-- *not optimal*'
     }
-    if (-not $isPortOpen -and $port -and $address -or $upnp -or $isTunneling) {
+    if ($upnp -or $isTunneling) {
         Write-Host 'Please, read this manual to fix this: 
         GUI:    https://docs.storj.io/docs/storj-share-gui-5xx#section-3-3-2-advanced-configuration
-        daemon: https://docs.storj.io/docs/storj-share-daemon-cli
         '
     }
 }
