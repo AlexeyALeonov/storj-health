@@ -7,12 +7,17 @@ PowerShell scripts to check the health of the nodes
 
        Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
 
+## Installing PowerShell scripts in your system
+Download script to any folder.
+
 ## Checking Storjshare-daemon and Storjshare-GUI v5.x.x logs
 Open PowerShell and execute:
 
    > [daemon-HealthChecking.ps1](/daemon-HealthChecking.ps1) \[-Path <path_to_logs>\]
 
 Script checking log files at default location `~\.config\storjshare\logs\*.log`
+
+You can execute downloaded script with command "Run at PowerShell" by clicking right mouse button on it.
 
 ## Checking deprecated Storjshare-GUI v4.1.1 logs
 Open PowerShell and execute:
@@ -21,6 +26,7 @@ Open PowerShell and execute:
  
 Script checking log files at default location `~\AppData\Roaming\Storj Share\*.log`
  
+You can execute downloaded script with command "Run at PowerShell" by clicking right mouse button on it.
 
 # Support
 If you want any new feature or you have found a bug, please submit an issue or create a pull request containing fix.
