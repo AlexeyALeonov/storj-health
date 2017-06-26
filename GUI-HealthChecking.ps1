@@ -149,7 +149,7 @@ Get-Item (Join-Path $Path *.log) |%{
         Write-Host 'Please, check it:' http://www.yougetsignal.com/tools/open-ports/
         Write-Host
         Write-Host 'Please, read this manual to fix this:
-        GUI:    https://docs.storj.io/docs/storj-share-gui-5xx#section-5-storj-share-troubleshooting
+        GUI:    https://docs.storj.io/docs/storj-share-gui#section-5-storj-share-troubleshooting
         '
     }
     if ($isTunneling) {
@@ -157,7 +157,7 @@ Get-Item (Join-Path $Path *.log) |%{
     }
     if ($upnp -or $isTunneling) {
         Write-Host 'Please, read this manual to fix this: 
-        GUI:    https://docs.storj.io/docs/storj-share-gui-5xx#section-3-3-2-advanced-configuration
+        GUI:    https://docs.storj.io/docs/storj-share-gui#section--3-3-2-advanced-configuration-
         '
     }
 }
