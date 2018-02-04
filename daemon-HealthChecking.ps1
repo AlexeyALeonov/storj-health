@@ -2,7 +2,7 @@
     $Path
 )
 if (-not $Path) {$Path = '~\.config\storjshare\logs\'}
-Get-Item (Join-Path $Path *.log) |%{
+Get-Item (Join-Path $Path *_*.log) |%{
     $file = $_;
     Write-Host "====================="
     Write-Host $file.Name;
@@ -34,7 +34,7 @@ Get-Item (Join-Path $Path *.log) |%{
         } else {
             Write-Warning ('```'+$upnp+'``` <-- *bad*')
         }
-        ($address, $port) = sls "upnp: (.*):(.*)" $file | 
+        ($address, $port) = sls "upnp: (.*?):(.*?)`"" $file | 
             select -last 1 | %{$_.matches.Groups[1].value, $_.Matches.Groups[2].value}
         Write-Host
     }
@@ -79,6 +79,7 @@ Get-Item (Join-Path $Path *.log) |%{
         $contact | sls '"responseTime":(.*?),' |  % {Write-Host ('response time : `' + $_.Matches.Groups[1].Value + '`')}
         $contact | sls '"lastTimeout":"(.*?)",' | % {Write-Host (' last timeout : `' + $_.Matches.Groups[1].Value + '`')}
         $contact | sls '"timeoutRate":(.*?),' |   % {Write-Host (' timeout rate : `' + $_.Matches.Groups[1].Value + '`')}
+        $contact | sls '"reputation":(.*?),' |    % {Write-Host ('   reputation : `' + $_.Matches.Groups[1].Value + '`')}
         Write-Host 
     }
 
@@ -96,20 +97,23 @@ Get-Item (Join-Path $Path *.log) |%{
         }
         Write-Host
     }
-    sls 'publish .*timestamp":"(.*)"' $file | select -last 1 | % {
-        write-host ('  last publish: `' + $_.matches.Groups[1].value + '` (' + (sls "publish" $file).Matches.Count + ')')
+    sls 'sending alloc .*timestamp":"(.*)"' $file | select -last 1 | % {
+        write-host ('  last  alloc: `' + $_.matches.Groups[1].value + '` (' + (sls "sending alloc" $file).Matches.Count + ')')
     }
-    sls 'offer .*timestamp":"(.*)"' $file | select -last 1 | % {
-        write-host ('    last offer: `' + $_.matches.Groups[1].value + '` (' + (sls "offer" $file).Matches.Count + ')')
-    }
-    sls 'consign.*timestamp":"(.*)"' $file | select -last 1 | % {
-        write-host ('last consigned: `' + $_.matches.Groups[1].value + '` (' + (sls "consign" $file).Matches.Count + ')')
-    }
-    sls 'download.*timestamp":"(.*)"' $_ | select -last 1 | % {
-        write-host (' last download: `' + $_.matches.groups[1].value + '` (' + (sls 'download' $_.Path).Matches.Count + ')')
-    }; 
-    sls 'upload.*timestamp":"(.*)"' $_ | select -last 1 | % {
-        write-host ('   last upload: `' + $_.matches.groups[1].value + '` (' + (sls 'upload' $_.Path).Matches.Count + ')')
+    sls 'shard download completed.*timestamp":"(.*)"' $file | select -last 1 | % {
+        $sr = (sls 'shard download completed.*size (\d*)' $file).Matches
+        $counter = 0; $sr | ?{$_} | %{$counter += $_.Groups[1].Value}
+        write-host ('last download: `' + $_.matches.groups[1].value + '` (' + $sr.Count + '): ' + $counter)
+    } 
+    sls 'mirror download completed.*timestamp":"(.*)"' $file | select -last 1 | % {
+        $sr = (sls 'mirror download completed.*size (\d*)' $file).Matches
+        $counter = 0; $sr | ?{$_} | %{$counter += $_.Groups[1].Value}
+        write-host ('  last mirror: `' + $_.matches.groups[1].value + '` (' + $sr.Count + '): ' + $counter)
+    } 
+    sls 'upload.*timestamp":"(.*)"' $file | select -last 1 | % {
+        $sr = (sls 'upload completed.*size (\d*)' $file).Matches
+        $counter = 0; $sr | ?{$_} | %{$counter += $_.Groups[1].Value}
+        write-host ('  last upload: `' + $_.matches.groups[1].value + '` (' + $sr.Count + '): ' + $counter)
     }
 
     Write-Host "--------------"
